@@ -35,7 +35,7 @@ export const BoardOptions = ({ id }: BoardOptionsProps) => {
         align="start"
       >
         <div className="text-sm font-medium text-center text-neutral-600 pb-4">
-          Board actions
+          Ações do quadro
         </div>
         <PopoverClose asChild>
           <Button
