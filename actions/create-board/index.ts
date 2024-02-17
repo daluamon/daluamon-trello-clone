@@ -8,6 +8,8 @@ import { CreateBoard } from "./schema";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { createAuditLog } from "@/lib/create-audit-log";
 import { ACTION, ENTITY_TYPE } from "@prisma/client";
+import { incrementAvailableCount, hasAvailableCount } from "@/lib/org-limit";
+import { checkSubscription } from "@/lib/subscription";
 
 
 const handler = async (data: InputType): Promise<ReturnType> => {
@@ -16,6 +18,15 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   if (!userId || !orgId) {
     return {
       error: "Você não está logado"
+    };
+  }
+
+  const canCreate = await hasAvailableCount();
+  const isPro = await checkSubscription();
+
+  if (!canCreate && !isPro) {
+    return {
+      error: "Você atingiu o limite de quadros disponíveis. Por favor atualize o seu plano para criar mais."
     };
   }
 
@@ -48,6 +59,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         imageUserName,
       },
     })
+
+    if (!isPro) {
+      await incrementAvailableCount();
+    }
 
     await createAuditLog({
       entityTitle: board.title,
